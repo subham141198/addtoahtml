@@ -8,62 +8,114 @@
 
 
 /********Create Table on activate*********/
-
- function atah_create_table() {
+function atah_create_table()
+{
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'addtoahtml';
 	$charset_collate = $wpdb->get_charset_collate();
 	$sql = "CREATE TABLE $table_name (
 		id int(11) NOT NULL AUTO_INCREMENT,
 		selector_name varchar(255) NOT NULL,
-		selector_type varchar(255) NOT NULL,
 		target_html varchar(255) NOT NULL,
 		target_page varchar(255) NOT NULL,
         target_location varchar(255) NOT NULL,
 		PRIMARY KEY  (id)
 	) $charset_collate;";
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-	dbDelta( $sql );	
+	dbDelta($sql);
 }
 
-function atah_activate(){
+
+
+function atah_create_post_type()
+{
+	register_post_type(
+		'add_html',
+		array(
+			'labels'      => array(
+				'name'          => __('Add to a Html', 'textdomain'),
+				'singular_name' => __('Html Snippet', 'textdomain'),
+			),
+			'public'      => true,
+			'has_archive' => true,
+			'supports' => array(
+				'title',
+				'editor',
+				'author',
+			),
+			'register_meta_box_cb' => 'atah_meta_box'  
+		)
+	);
+}
+add_action('init', 'atah_create_post_type');
+
+function atah_activate()
+{
 	atah_create_table();
+	atah_create_post_type();
 	flush_rewrite_rules();
 }
-register_activation_hook( __FILE__,'atah_activate');  /********action Hook for activation of plugin*********/
-
+register_activation_hook(__FILE__, 'atah_activate');/********action Hook for activation of plugin*********/
 
 /********Delete Table on deactivate*********/
-function atah_delete_plugin_data() {
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'addtoahtml';
-    $sql = "DROP TABLE IF EXISTS $table_name;";
-    $wpdb->query($sql);
-}    
-register_deactivation_hook( __FILE__, 'atah_delete_plugin_data' ); /********action Hook for deactivation of plugin*********/
-
-
-
- 
-function atah_plugin_setup_menu(){
-    add_menu_page( 'Add to a HTML', 'Add to a HTML', 'manage_options', 'atah_plugin', 'atah_plugin_home_page',esc_url(plugins_url('add-to-a-html/images/atah_icon.png',dirname(__FILE__))), 2);
-
-	add_submenu_page(
-        'atah_plugin',
-        'Add New',
-        'Add New',
-        'manage_options',
-        'atah_submenu_add_new',
-        'atah_plugin_addnew_page'
-    );
+function atah_delete_plugin_data()
+{
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'addtoahtml';
+	$sql = "DROP TABLE IF EXISTS $table_name;";
+	$wpdb->query($sql);
 }
+register_deactivation_hook(__FILE__, 'atah_delete_plugin_data');
+/********action Hook for deactivation of plugin*********/
 
-add_action('admin_menu', 'atah_plugin_setup_menu');
-function atah_plugin_home_page(){
-   
+function atah_meta_box()
+{
+	add_meta_box(
+		'add_html_url_meta_box',
+		'Add HTML',
+		'atah_custom_post_field',
+		'add_html',
+		'normal',
+		'default'
+	);
 }
- 
-function atah_plugin_addnew_page(){
-    include('includes/add-new.php');
+add_action('add_meta_boxes', 'atah_meta_box');
+
+function atah_custom_post_field()
+{
+	
+	echo '<label for="add_html_url_field">Selector Name: </label>';
+	echo '<input type="text" name="atah_selector_name" size="30" />';
+	echo '<br>';
+	echo '<br>';
+	echo '<label for="add_html_url_field">Target HTML: </label>';
+	echo '<textarea name="atah_target_html" size="30" ></textarea>';
+	echo '<br>';
+	echo '<br>';
+	echo '<label for="add_html_url_field">Target Page:</label>';
+	echo '<input type="text"  name="atah_target_page" size="30" />';
+	echo '<br>';
+	echo '<br>';
+	echo '<label for="add_html_url_field">Target Location: </label>';
+	echo '<select name="atah_target_location">';
+	echo '<option>Before</option>';
+	echo '<option>After</option>';
+	echo '<option>InnerHTML</option>';
+	echo '</select>';
+
+	
 }
- 
+$atah_fields = array(
+	'selector_name' => $_POST['atah_selector_name'],
+	'target_html' => $_POST['atah_target_html'],
+	'target_page' => $_POST['atah_target_page'],
+	'target_location' => $_POST['atah_target_location']
+);
+var_dump($atah_fields);
+global $wpdb;
+$table_name = $wpdb->prefix . 'addtoahtml';
+foreach($atah_fields as $field_name => $field_data){
+	$data = array($field_name => $field_data);
+}
+$wpdb->insert($table_name, $data);
+

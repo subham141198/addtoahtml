@@ -1,19 +1,20 @@
 <?php
 error_reporting(E_ALL);
-define('e_api_PATH', plugin_dir_path(__FILE__) . 'includes/');
+define('atah_PATH', plugin_dir_path(__FILE__) . 'includes/');
+define('atah_ASSETS', plugin_dir_url(__FILE__) . 'assets/');
 /*
  * Plugin Name:       Add To A HTML
  * Description:       Add a HTML snippet after before or InnerHTML with classname or ID of an Element
- * 
- * 
- * 
+ * Plugin URI:        http://www.ewaycorp.com
  * Version:           1.0
  * Author:            Subham Banerjee
  */
 
 function atah_activate_init()
 {
-	include_once(e_api_PATH . 'functions.php');
+	include_once(atah_PATH . 'atah_functions.php');
+	include_once(atah_PATH . 'atah_register_script.php');
+	include_once(atah_PATH . 'atah_response.php');
 }
 add_action('init', 'atah_activate_init');
 
@@ -27,7 +28,7 @@ function atah_create_table()
 		id int(11) NOT NULL AUTO_INCREMENT,
 		atah_post_id int(10),
 		atah_selector_name varchar(255) NOT NULL,
-		atah_target_html varchar(255) NOT NULL,
+		atah_target_html text NOT NULL,
 		atah_target_page varchar(255) NOT NULL,
         atah_target_location varchar(255) NOT NULL,
 		PRIMARY KEY  (id)
@@ -110,7 +111,17 @@ add_action('add_meta_boxes', 'atah_meta_box');
 
 function atah_custom_post_field($post)    //
 {
-	$meta = atah_get_fields_data($post->ID);
+	if ($result = atah_get_fields_data($post->ID)) {
+		$meta = atah_get_fields_data($post->ID);
+	} else {
+
+		$meta = new stdClass();
+		$meta->atah_selector_name = 'Enter data';
+		$meta->atah_target_html = 'Enter Data';
+		$meta->atah_target_page = 'Home';
+		$meta->atah_target_location = 'before';
+	}
+
 	$pages = get_pages();
 	$atah_selected_page_option = $meta->atah_target_page;
 
@@ -121,24 +132,19 @@ function atah_custom_post_field($post)    //
 	);
 	$atah_selected_location_option = $meta->atah_target_location;
 
-
-
-	// wp_nonce_field('atah_meta_box', 'atah_meta_box_nonce');
 	echo '<label for="atah_selector_name">Selector Name: </label>';
 	echo '<input type="text" name="atah_selector_name" value="' . esc_attr($meta->atah_selector_name) . '" size="30" />';
 	echo '<br>';
 	echo '<br>';
 	echo '<label for="atah_target_html">Target HTML: </label>';
-	echo '<input type="text" name="atah_target_html" value="' . esc_attr($meta->atah_target_html) . '" size="30" ></input>';
+	echo '<textarea id="myTextarea" name="atah_target_html" value="'.esc_attr($meta->atah_target_html).'" size="30"></textarea>';
 	echo '<br>';
 	echo '<br>';
 	echo '<label for="atah_target_page">Target Page:</label>';
-
-	echo '<select name="atah_target_page">';
+	echo '<select class="page_id" name="atah_target_page">';
 	foreach ($pages as $page) {
-
 		$selected = selected($atah_selected_page_option, $page->post_title, false);
-		echo '<option' . $selected . '>' . $page->post_title . '</option>';
+		echo '<option value="' .$page->ID. '"' . $selected . '>' . $page->post_title . '</option>';
 	}
 	echo '</select>';
 	echo '<br>';
@@ -153,7 +159,7 @@ function atah_custom_post_field($post)    //
 }
 function atah_save_meta_box($post_id)
 {
-	if(
+	if (
 		!empty($_POST['atah_selector_name']) &&
 		!empty($_POST['atah_target_html']) &&
 		!empty($_POST['atah_target_page']) &&
@@ -162,27 +168,26 @@ function atah_save_meta_box($post_id)
 		$atah_fields = array(
 			'atah_post_id' => $post_id,
 			'atah_selector_name' => sanitize_text_field($_POST['atah_selector_name']),
-			'atah_target_html' => sanitize_text_field($_POST['atah_target_html']),
+			'atah_target_html' => $_POST['atah_target_html'],
 			'atah_target_page' => sanitize_text_field($_POST['atah_target_page']),
 			'atah_target_location' => sanitize_text_field($_POST['atah_target_location'])
 		);
-		
 		if ($results = atah_get_fields_data($post_id)) {
 			atah_update_fields_data($post_id, $atah_fields);
 		} else {
 			atah_insert_fields_data($atah_fields);
 		}
 	}
+	
 }
 add_action('save_post_add_html', 'atah_save_meta_box');
-
 add_filter('manage_add_html_posts_columns', 'atah_set_custom_edit_book_columns');
+
 function atah_set_custom_edit_book_columns($columns)
 {
 	unset($columns['author']);
 	unset($columns['date']);
 	$columns['atah_selector_name'] = __('Selector Name', 'your_text_domain');
-	$columns['atah_target_html'] = __('HTML', 'your_text_domain');
 	$columns['atah_target_page'] = __('Target Page', 'your_text_domain');
 	$columns['atah_target_location'] = __('Location', 'your_text_domain');
 	return $columns;
@@ -192,32 +197,25 @@ add_action('manage_add_html_posts_custom_column', 'atah_custom_add_html_column',
 function atah_custom_add_html_column($column, $post_id)
 {
 	$fields_data = atah_get_fields_data($post_id);
-
 	switch ($column) {
 
 		case 'atah_selector_name':
 			if ($fields_data != '') {
 				echo $fields_data->atah_selector_name;
 			} else
-				_e('Unable to get author(s)', 'your_text_domain');
-			break;
-		case 'atah_target_html':
-			if ($fields_data != '') {
-				echo $fields_data->atah_target_html;
-			} else
-				_e('Unable to get author(s)', 'your_text_domain');
+				_e('Unable to get selector name(s)', 'your_text_domain');
 			break;
 		case 'atah_target_page':
 			if ($fields_data != '') {
 				echo $fields_data->atah_target_page;
 			} else
-				_e('Unable to get author(s)', 'your_text_domain');
+				_e('Unable to get the target page(s)', 'your_text_domain');
 			break;
 		case 'atah_target_location':
 			if ($fields_data != '') {
 				echo $fields_data->atah_target_location;
 			} else
-				_e('Unable to get author(s)', 'your_text_domain');
+				_e('Unable to get target location(s)', 'your_text_domain');
 			break;
 	}
 }

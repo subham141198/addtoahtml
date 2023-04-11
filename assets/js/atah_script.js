@@ -1,7 +1,5 @@
 jQuery(document).ready(function () {
-  tinymce.init({
-    selector: "#myTextarea",
-  });
+
 
   var page_url = window.location.href;
   console.log(page_url);
@@ -16,7 +14,24 @@ jQuery(document).ready(function () {
     processData: false,
     data: form_data,
     success: function (data) {
-      console.log(data);
+      jQuery.each(data.atah_html_data, function (indexInArray, valueOfElement) {
+        if (jQuery(valueOfElement.atah_selector_name)[0]) {
+          if (valueOfElement.atah_target_location == 'after') {
+            jQuery(valueOfElement.atah_selector_name).after(valueOfElement.atah_target_html);
+          }
+          if (valueOfElement.atah_target_location == 'before') {
+            jQuery(valueOfElement.atah_selector_name).before(valueOfElement.atah_target_html);
+          }
+          if (valueOfElement.atah_target_location == 'innerhtml') {
+            jQuery(valueOfElement.atah_selector_name).html(valueOfElement.atah_target_html);
+          }
+        } else {
+          jQuery('body').html(valueOfElement.atah_target_html);
+
+        }
+      });
+
+
     },
     error: function (XMLHttpRequest, textStatus, errorThrown) {
       console.log("Error: " + errorThrown);

@@ -7,11 +7,10 @@ function atah_fetch_post(){
 
     $result = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE atah_target_page = %d", $page_id));
     if($result > 0 ){
-        echo json_encode(array('html' => $result));
+        echo json_encode(array('atah_html_data' => $result));
     }else{
-        echo json_encode(array('html' => 'there is noting'));
+        echo json_encode(array('atah_html_data' => 'there is noting'));
     }
-   
     exit();
 }
 

@@ -131,19 +131,21 @@ function atah_custom_post_field($post)    //
 		'innerhtml' => 'InnerHTML'
 	);
 	$atah_selected_location_option = $meta->atah_target_location;
-
+	echo '<div class="atah_form_wrapper">';
 	echo '<label for="atah_selector_name">Selector Name: </label>';
-	echo '<input type="text" name="atah_selector_name" value="' . esc_attr($meta->atah_selector_name) . '" size="30" />';
+	echo '<input placeholder="Enter the ID, Classname or Element with prefix" type="text" name="atah_selector_name" value="' . esc_attr($meta->atah_selector_name) . '" size="30" />';
 	echo '<br>';
 	echo '<br>';
-	echo '<label for="atah_target_html">Target HTML: </label>';
-	echo '<textarea id="myTextarea" name="atah_target_html" value="'.esc_attr($meta->atah_target_html).'" size="30"></textarea>';
+	
+	$content = get_post_meta( $post->ID, 'atah_custom_post_type_editor', true );
+	$content = $meta->atah_target_html;
+    wp_editor( $content, 'atah_custom_post_type_editor' );
 	echo '<br>';
 	echo '<br>';
 	echo '<label for="atah_target_page">Target Page:</label>';
 	echo '<select class="page_id" name="atah_target_page">';
 	foreach ($pages as $page) {
-		$selected = selected($atah_selected_page_option, $page->post_title, false);
+		$selected = selected($atah_selected_page_option, $page->ID, false);
 		echo '<option value="' .$page->ID. '"' . $selected . '>' . $page->post_title . '</option>';
 	}
 	echo '</select>';
@@ -156,19 +158,20 @@ function atah_custom_post_field($post)    //
 		echo '<option value="' . $value . '"' . $selected . '>' . $label . '</option>';
 	}
 	echo '</select>';
+	echo '</div>';
 }
 function atah_save_meta_box($post_id)
 {
 	if (
 		!empty($_POST['atah_selector_name']) &&
-		!empty($_POST['atah_target_html']) &&
+		!empty($_POST['atah_custom_post_type_editor']) &&
 		!empty($_POST['atah_target_page']) &&
 		!empty($_POST['atah_target_location'])
 	) {
 		$atah_fields = array(
 			'atah_post_id' => $post_id,
-			'atah_selector_name' => sanitize_text_field($_POST['atah_selector_name']),
-			'atah_target_html' => $_POST['atah_target_html'],
+			'atah_selector_name' => $_POST['atah_selector_name'],
+			'atah_target_html' => $_POST['atah_custom_post_type_editor'],
 			'atah_target_page' => sanitize_text_field($_POST['atah_target_page']),
 			'atah_target_location' => sanitize_text_field($_POST['atah_target_location'])
 		);

@@ -1,12 +1,12 @@
-.hi_selector_input{
-    width: 100%;  
+.shci_selector_input{
+    width: 100%;
 }
-.hi_selector_label{
+.shci_selector_label{
     display: block;
     margin-bottom: 1%;
     font-size: 20px;
 }
-.hi_insert_html_label{
+.shci_insert_html_label{
     display: block;
     margin-bottom: 1%;
     font-size: 20px;
@@ -17,20 +17,20 @@
      font-weight: 500 !important;
 }
 
-.hi_target_page_label{
+.shci_target_page_label{
     display: block;
     margin-bottom: 1%;
     font-size: 20px;
 }
-.hi_target_page_selector{
-    width: 100%;  
+.shci_target_page_selector{
+    width: 100%;
 }
-.hi_target_location_label{
+.shci_target_location_label{
     display: block;
     margin-bottom: 1%;
     font-size: 20px;
 }
-.hi_select_location_selector{
-    width: 100%; 
+.shci_select_location_selector{
+    width: 100%;
 }
 

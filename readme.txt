@@ -1,6 +1,6 @@
 
 
-=== HTML Injector ===
+=== Simple Html Code Inector ===
 Contributors: subham1411
 Tags:  html,ajax,seo,jquery,css,wordpress
 Requires at least: 5.0

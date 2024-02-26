@@ -113,6 +113,8 @@ add_action('add_meta_boxes', 'shci_meta_box');
 
 function shci_custom_post_field($post)   {
 
+
+
 	if ($result = shci_get_fields_data($post->ID)) {
 		$shci_data = shci_get_fields_data($post->ID);
 	} else {
@@ -141,6 +143,7 @@ function shci_custom_post_field($post)   {
 	);
 	$shci_selected_location_option = $shci_data->shci_target_location;
 	echo '<div class="shci_form_wrapper">';
+	 wp_nonce_field('shci_meta_box_nonce_action', 'shci_meta_box_nonce');
 	echo '<label class="shci_target_location_label" for="shci_target_location">Selector Type </label>';
 	echo '<select class="shci_selector_type" name="shci_selector_type">';
 	foreach ($selector_type_options as $value => $label) {
@@ -174,19 +177,27 @@ function shci_custom_post_field($post)   {
 	echo '</div>';
 }
 function shci_save_meta_box($post_id){
+
+	if (!isset($_POST['shci_meta_box_nonce'])) {
+		return;
+	}
+	// Verify nonce
+	if (!wp_verify_nonce($_POST['shci_meta_box_nonce'], 'shci_meta_box_nonce_action')) {
+		return;
+	}
+
 	if (
 		empty($_POST['shci_selector_name']) &&
 		empty($_POST['shci_custom_post_type_editor']) &&
 		empty($_POST['shci_target_page']) &&
 		empty($_POST['shci_target_location'])
-
 	) {
 		return;
 	}
+
 	if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
 		return;
 	}
-
 
 	$shci_fields = array(
 		'shci_post_id' => $post_id,
@@ -196,12 +207,14 @@ function shci_save_meta_box($post_id){
 		'shci_target_page' => sanitize_text_field($_POST['shci_target_page']),
 		'shci_target_location' => sanitize_text_field($_POST['shci_target_location'])
 	);
+
 	if ($results = shci_get_fields_data($post_id)) {
 		shci_update_fields_data($post_id, $shci_fields);
 	} else {
 		shci_insert_fields_data($shci_fields);
 	}
 }
+add_action('save_post_html_inject', 'shci_save_meta_box');
 add_action('save_post_html_inject', 'shci_save_meta_box');
 
 
@@ -226,25 +239,25 @@ function shci_custom_html_inject_column($column, $post_id){
 			if ($shci_fields_data != '') {
 				esc_html_e($shci_fields_data->shci_selector_type,'simple-html-code-injector');
 			} else
-				_e('Unable to get selector type(s)', 'simple-html-code-injector');
+				esc_html_e('Unable to get selector type(s)', 'simple-html-code-injector');
 			break;
 		case 'shci_selector_name':
 			if ($shci_fields_data != '') {
 				esc_html_e($shci_fields_data->shci_selector_name,'simple-html-code-injector');
 			} else
-				_e('Unable to get selector name(s)', 'simple-html-code-injector');
+				esc_html_e('Unable to get selector name(s)', 'simple-html-code-injector');
 			break;
 		case 'shci_target_page':
 			if ($shci_fields_data != '') {
 				esc_html_e($shci_fields_data->shci_target_page,'simple-html-code-injector');
 			} else
-				_e('Unable to get the target page(s)', 'simple-html-code-injector');
+				esc_html_e('Unable to get the target page(s)', 'simple-html-code-injector');
 			break;
 		case 'shci_target_location':
 			if ($shci_fields_data != '') {
 				esc_html_e($shci_fields_data->shci_target_location,'simple-html-code-injector');
 			} else
-				_e('Unable to get target location(s)', 'simple-html-code-injector');
+				esc_html_e('Unable to get target location(s)', 'simple-html-code-injector');
 			break;
 	}
 }

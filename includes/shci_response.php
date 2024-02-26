@@ -5,12 +5,13 @@ function shci_fetch_post()
 
 
     global $wpdb;
+    $page_url = sanitize_text_field($_POST["page_url"]);
     $table_name = $wpdb->prefix . 'htmlinjector';
-    $result = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE shci_target_page = %s",  get_post_field( 'post_name', url_to_postid($_POST["page_url"]))));
+    $result = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE shci_target_page = %s",  get_post_field( 'post_name', url_to_postid($page_url))));
     if ($result > 0) {
-        echo json_encode(array('shci_html_data' => $result));
+        echo wp_json_encode(array('shci_html_data' => $result));
     } else {
-        echo json_encode(array('shci_html_data' => 'there is noting',));
+        echo wp_json_encode(array('shci_html_data' => 'there is noting',));
     }
     exit();
 }
